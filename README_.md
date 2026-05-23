@@ -40,11 +40,11 @@ Download the Indic Canary NeMo source and checkpoint:
 cd $WORKDIR
 
 # NeMo source tree used during conversion
-wget https://indicwhisper.objectstore.e2enetworks.net/indic-canary/canary-nemo.tar.gz
+wget NeMo repo
 tar -xvf canary-nemo.tar.gz
 
 # Model checkpoint
-wget https://indicwhisper.objectstore.e2enetworks.net/indic-canary/checkpoints/indic-canary.nemo
+wget NeMo ckpt
 ```
 
 After this step `$WORKDIR` should contain at least:
