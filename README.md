@@ -135,6 +135,7 @@ pip install "transformers==4.48.3"
 
 `riva-build` packages the `.riva` into an `.rmir` ready for Triton deployment. The flags below configure an **offline Canary 1B multi-language ASR** model with a 30 s chunk size and no streaming padding:
 
+Method 
 ```bash
 riva-build speech_recognition \
   "/home/bodhan/riva/rmir/indic-canary-multi.rmir":"bodhan" \
@@ -156,6 +157,33 @@ riva-build speech_recognition \
   --featurizer.max_batch_size=128 \
   --featurizer.max_execution_batch_size=128 \
   --language_code=as,bn,brx,doi,en,gu,hi,kn,ks,kok,mai,ml,mni,mr,ne,or,pa,sa,sat,sd,ta,te,ur
+```
+
+### Untested
+```
+riva-build --config-path=pkg://servicemaker.configs.asr --config-name=offline \
+  "/home/bodhan/riva/rmir/indic-canary-multi.rmir":"bodhan" \
+  "/home/bodhan/riva/indic-canary.riva":"bodhan" \
+  name=canary-1b-multi-asr-offline \
+  unified_acoustic_model=true \
+  use_cpp_postprocessing=False \
+  language_code=\'as,bn,brx,doi,en,gu,hi,kn,ks,kok,mai,ml,mni,mr,ne,or,pa,sa,sat,sd,ta,te,ur' \
+  chunk_size=30 \
+  left_padding_size=0 \
+  right_padding_size=0 \
+  feature_extractor_type=torch \
+  torch_feature_type=nemo \
+  max_batch_size=8 \
+  featurizer.use_utterance_norm_params=false \
+  featurizer.precalc_norm_params=false \
+  featurizer.max_batch_size=128 \
+  featurizer.max_execution_batch_size=128 \
+  ms_per_timestep=80 \
+  share_flags=true \
+  featurizer.norm_per_feature=true \
+  decoder=trtllm \
+  trtllm_decoder.max_output_len=200 \
+  trtllm_decoder.decoupled_mode=true
 ```
 
 The `:bodhan` suffixes on the input/output paths are encryption keys — they must match the key used in `nemo2riva`.
