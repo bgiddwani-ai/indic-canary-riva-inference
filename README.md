@@ -26,7 +26,7 @@ The pipeline has three stages:
 Set up the working and data directories on the **host**:
 
 ```bash
-export WORKDIR="/userhome/home/bgiddwani/bodhan"
+export WORKDIR="/userhome/home/bgiddwani/pipeline"
 export DATADIR="/userhome/home/bgiddwani/data"
 
 mkdir -p $WORKDIR
@@ -63,7 +63,7 @@ Launch the NeMo container with `$WORKDIR` and `$DATADIR` mounted:
 ```bash
 docker run -it --rm \
   --gpus '"device=0"' \
-  -v $WORKDIR:/home/bodhan \
+  -v $WORKDIR:/home/pipeline \
   -v $DATADIR:/data \
   nvcr.io/nvidia/nemo:25.02
 ```
@@ -82,19 +82,19 @@ cd ../NeMo/
 bash reinstall.sh
 ```
 
-Run the conversion. `--key` is the encryption key embedded in the `.riva` artifact (here we use `bodhan`; pick any string but remember it — the build step needs the same key):
+Run the conversion. `--key` is the encryption key embedded in the `.riva` artifact (here we use `pipeline`; pick any string but remember it — the build step needs the same key):
 
 ```bash
-export PYTHONPATH=/home/bodhan/NeMo:$PYTHONPATH
+export PYTHONPATH=/home/pipeline/NeMo:$PYTHONPATH
 
 nemo2riva \
-  --key=bodhan \
-  --out /home/bodhan/riva/-canary.riva \
+  --key=pipeline \
+  --out /home/pipeline/riva/-canary.riva \
   --format nemo \
-  /home/bodhan/-canary.nemo
+  /home/pipeline/-canary.nemo
 ```
 
-The result is `/home/bodhan/riva/-canary.riva` on the host (`$WORKDIR/riva/-canary.riva`). You can exit this container.
+The result is `/home/pipeline/riva/-canary.riva` on the host (`$WORKDIR/riva/-canary.riva`). You can exit this container.
 
 ---
 
@@ -105,7 +105,7 @@ Launch the RIVA Speech container with the same mounts:
 ```bash
 docker run -it --rm \
   --gpus '"device=0"' \
-  -v $WORKDIR:/home/bodhan \
+  -v $WORKDIR:/home/pipeline \
   -v $DATADIR:/data \
   -p 50051:50051 \
   nvcr.io/nvidia/riva/riva-speech:2.19.0
@@ -124,7 +124,7 @@ pip install -U --no-cache-dir --ignore-installed \
 apt-get remove -y python3-blinker
 
 pip uninstall -y nemo_toolkit
-cd /home/bodhan/NeMo
+cd /home/pipeline/NeMo
 bash reinstall.sh
 
 pip install -U --no-cache-dir --ignore-installed 'protobuf>=5.26,<6'
@@ -138,8 +138,8 @@ pip install "transformers==4.48.3"
 Method 
 ```bash
 riva-build speech_recognition \
-  "/home/bodhan/riva/rmir/-canary-multi.rmir":"bodhan" \
-  "/home/bodhan/riva/-canary.riva":"bodhan" \
+  "/home/pipeline/riva/rmir/-canary-multi.rmir":"pipeline" \
+  "/home/pipeline/riva/-canary.riva":"pipeline" \
   --offline \
   --name=canary-1b-multi-asr-offline \
   --return_separate_utterances=True \
@@ -162,8 +162,8 @@ riva-build speech_recognition \
 ### Untested
 ```
 riva-build --config-path=pkg://servicemaker.configs.asr --config-name=offline \
-  "/home/bodhan/riva/rmir/-canary-multi.rmir":"bodhan" \
-  "/home/bodhan/riva/-canary.riva":"bodhan" \
+  "/home/pipeline/riva/rmir/-canary-multi.rmir":"pipeline" \
+  "/home/pipeline/riva/-canary.riva":"pipeline" \
   name=canary-1b-multi-asr-offline \
   unified_acoustic_model=true \
   use_cpp_postprocessing=False \
@@ -186,12 +186,12 @@ riva-build --config-path=pkg://servicemaker.configs.asr --config-name=offline \
   trtllm_decoder.decoupled_mode=true
 ```
 
-The `:bodhan` suffixes on the input/output paths are encryption keys — they must match the key used in `nemo2riva`.
+The `:pipeline` suffixes on the input/output paths are encryption keys — they must match the key used in `nemo2riva`.
 
 ### 3.3 Deploy to the Triton repository
 
 ```bash
-riva-deploy /home/bodhan/riva/rmir/-canary-multi.rmir:bodhan /data/models -f
+riva-deploy /home/pipeline/riva/rmir/-canary-multi.rmir:pipeline /data/models -f
 ```
 
 `-f` overwrites any existing model directory of the same name. After this completes you should see a directory like:
@@ -232,7 +232,7 @@ Open a **separate container** (the NeMo image works fine) on the same host, join
 ```bash
 docker run -it --rm \
   --gpus '"device=0"' \
-  -v $WORKDIR:/home/bodhan \
+  -v $WORKDIR:/home/pipeline \
   -v $DATADIR:/data \
   --net=host \
   nvcr.io/nvidia/nemo:25.02
@@ -277,7 +277,7 @@ The deployed model accepts the following BCP-47–style codes (passed via `--lan
 
 ## Notes & Troubleshooting
 
-- **Encryption key consistency.** The same key (`bodhan` above) is used in `nemo2riva`, in both arguments to `riva-build`, and in `riva-deploy`. Changing it in any one place will cause the next stage to fail with a decryption error.
+- **Encryption key consistency.** The same key (`pipeline` above) is used in `nemo2riva`, in both arguments to `riva-build`, and in `riva-deploy`. Changing it in any one place will cause the next stage to fail with a decryption error.
 - **Mount paths.** `$DATADIR/models` must be mounted to `/data/models` inside the RIVA container — `start-riva` does not accept an alternative repository path on the command line in this image.
 - **Container reuse.** Steps 2 and 3 are intentionally split across `nemo:25.02` and `riva-speech:2.19.0` because the two toolchains have incompatible Python environments. Don't try to combine them.
 - **Offline only.** This build disables streaming (`--offline`, zero padding). For streaming inference, rebuild the RMIR with non-zero `--left_padding_size` / `--right_padding_size` and remove `--offline`.
