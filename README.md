@@ -1,6 +1,6 @@
 # Indic Canary RIVA Offline Inference
 
-End-to-end guide for deploying the [Indic Canary](https://indicwhisper.objectstore.e2enetworks.net/indic-canary/) ASR model on NVIDIA RIVA for **offline (non-streaming) inference** across 22 Indian languages.
+End-to-end guide for deploying the Indic Canary ASR model on NVIDIA RIVA for **offline (non-streaming) inference** across 22 Indian languages.
 
 The pipeline has three stages:
 
