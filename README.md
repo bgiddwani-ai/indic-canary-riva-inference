@@ -1,6 +1,6 @@
-# Indic Canary RIVA Offline Inference
+#  Canary RIVA Offline Inference
 
-End-to-end guide for deploying the Indic Canary ASR model on NVIDIA RIVA for **offline (non-streaming) inference** across 22 Indian languages.
+End-to-end guide for deploying the  Canary ASR model on NVIDIA RIVA for **offline (non-streaming) inference** across 22 Indian languages.
 
 The pipeline has three stages:
 
@@ -34,7 +34,7 @@ mkdir -p $DATADIR/rmir
 mkdir -p $DATADIR/models
 ```
 
-Download the Indic Canary NeMo source and checkpoint:
+Download the  Canary NeMo source and checkpoint:
 
 ```bash
 cd $WORKDIR
@@ -51,7 +51,7 @@ After this step `$WORKDIR` should contain at least:
 
 ```
 NeMo/                  # extracted source tree
-indic-canary.nemo      # model checkpoint
+-canary.nemo      # model checkpoint
 ```
 
 ---
@@ -89,12 +89,12 @@ export PYTHONPATH=/home/bodhan/NeMo:$PYTHONPATH
 
 nemo2riva \
   --key=bodhan \
-  --out /home/bodhan/riva/indic-canary.riva \
+  --out /home/bodhan/riva/-canary.riva \
   --format nemo \
-  /home/bodhan/indic-canary.nemo
+  /home/bodhan/-canary.nemo
 ```
 
-The result is `/home/bodhan/riva/indic-canary.riva` on the host (`$WORKDIR/riva/indic-canary.riva`). You can exit this container.
+The result is `/home/bodhan/riva/-canary.riva` on the host (`$WORKDIR/riva/-canary.riva`). You can exit this container.
 
 ---
 
@@ -138,8 +138,8 @@ pip install "transformers==4.48.3"
 Method 
 ```bash
 riva-build speech_recognition \
-  "/home/bodhan/riva/rmir/indic-canary-multi.rmir":"bodhan" \
-  "/home/bodhan/riva/indic-canary.riva":"bodhan" \
+  "/home/bodhan/riva/rmir/-canary-multi.rmir":"bodhan" \
+  "/home/bodhan/riva/-canary.riva":"bodhan" \
   --offline \
   --name=canary-1b-multi-asr-offline \
   --return_separate_utterances=True \
@@ -162,8 +162,8 @@ riva-build speech_recognition \
 ### Untested
 ```
 riva-build --config-path=pkg://servicemaker.configs.asr --config-name=offline \
-  "/home/bodhan/riva/rmir/indic-canary-multi.rmir":"bodhan" \
-  "/home/bodhan/riva/indic-canary.riva":"bodhan" \
+  "/home/bodhan/riva/rmir/-canary-multi.rmir":"bodhan" \
+  "/home/bodhan/riva/-canary.riva":"bodhan" \
   name=canary-1b-multi-asr-offline \
   unified_acoustic_model=true \
   use_cpp_postprocessing=False \
@@ -191,7 +191,7 @@ The `:bodhan` suffixes on the input/output paths are encryption keys — they mu
 ### 3.3 Deploy to the Triton repository
 
 ```bash
-riva-deploy /home/bodhan/riva/rmir/indic-canary-multi.rmir:bodhan /data/models -f
+riva-deploy /home/bodhan/riva/rmir/-canary-multi.rmir:bodhan /data/models -f
 ```
 
 `-f` overwrites any existing model directory of the same name. After this completes you should see a directory like:
