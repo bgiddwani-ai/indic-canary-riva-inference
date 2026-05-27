@@ -89,12 +89,12 @@ export PYTHONPATH=/home/pipeline/NeMo:$PYTHONPATH
 
 nemo2riva \
   --key=pipeline \
-  --out /home/pipeline/riva/-canary.riva \
+  --out /home/pipeline/riva/indic-canary.riva \
   --format nemo \
-  /home/pipeline/-canary.nemo
+  /home/pipeline/indic-canary.nemo
 ```
 
-The result is `/home/pipeline/riva/-canary.riva` on the host (`$WORKDIR/riva/-canary.riva`). You can exit this container.
+The result is `/home/pipeline/riva/indic-canary.riva` on the host (`$WORKDIR/riva/indic-canary.riva`). You can exit this container.
 
 ---
 
@@ -136,10 +136,12 @@ pip install "transformers==4.48.3"
 `riva-build` packages the `.riva` into an `.rmir` ready for Triton deployment. The flags below configure an **offline Canary 1B multi-language ASR** model with a 30 s chunk size and no streaming padding:
 
 Method 
+
+## NeMo Decoder
 ```bash
 riva-build speech_recognition \
-  "/home/pipeline/riva/rmir/-canary-multi.rmir":"pipeline" \
-  "/home/pipeline/riva/-canary.riva":"pipeline" \
+  "/home/pipeline/riva/rmir/indic-canary-multi-nemo.rmir":"pipeline" \
+  "/home/pipeline/riva/indic-canary.riva":"pipeline" \
   --offline \
   --name=canary-1b-multi-asr-offline \
   --return_separate_utterances=True \
@@ -159,31 +161,30 @@ riva-build speech_recognition \
   --language_code=as,bn,brx,doi,en,gu,hi,kn,ks,kok,mai,ml,mni,mr,ne,or,pa,sa,sat,sd,ta,te,ur
 ```
 
-### Untested
+### TRTLLM Decoder
 ```
-riva-build --config-path=pkg://servicemaker.configs.asr --config-name=offline \
-  "/home/pipeline/riva/rmir/-canary-multi.rmir":"pipeline" \
-  "/home/pipeline/riva/-canary.riva":"pipeline" \
-  name=canary-1b-multi-asr-offline \
-  unified_acoustic_model=true \
-  use_cpp_postprocessing=False \
-  language_code=\'as,bn,brx,doi,en,gu,hi,kn,ks,kok,mai,ml,mni,mr,ne,or,pa,sa,sat,sd,ta,te,ur' \
-  chunk_size=30 \
-  left_padding_size=0 \
-  right_padding_size=0 \
-  feature_extractor_type=torch \
-  torch_feature_type=nemo \
-  max_batch_size=8 \
-  featurizer.use_utterance_norm_params=false \
-  featurizer.precalc_norm_params=false \
-  featurizer.max_batch_size=128 \
-  featurizer.max_execution_batch_size=128 \
-  ms_per_timestep=80 \
-  share_flags=true \
-  featurizer.norm_per_feature=true \
-  decoder=trtllm \
-  trtllm_decoder.max_output_len=200 \
-  trtllm_decoder.decoupled_mode=true
+riva-build speech_recognition \
+  "/home/pipeline/riva/rmir/indic-canary-multi-trtllm.rmir":"pipeline" \
+  "/home/pipeline/riva/indic-canary.riva":"pipeline" \
+  --offline \
+  --name=canary-1b-multi-asr-offline \
+  --return_separate_utterances=True \
+  --chunk_size 30 \
+  --left_padding_size 0 \
+  --right_padding_size 0 \
+  --decoder_type trtllm \
+  --nemo_decoder.nemo_decoder_type canary \
+  --feature_extractor_type torch \
+  --torch_feature_type nemo \
+  --featurizer.norm_per_feature true \
+  --max_batch_size 32 \
+  --featurizer.use_utterance_norm_params=False \
+  --featurizer.precalc_norm_params False \
+  --featurizer.max_batch_size=128 \
+  --featurizer.max_execution_batch_size=128 \
+  --language_code=as,bn,brx,doi,en,gu,hi,kn,ks,kok,mai,ml,mni,mr,ne,or,pa,sa,sat,sd,ta,te,ur \
+  --trtllm_decoder.max_output_len=200 \
+  --unified_acoustic_model
 ```
 
 The `:pipeline` suffixes on the input/output paths are encryption keys — they must match the key used in `nemo2riva`.
@@ -191,7 +192,7 @@ The `:pipeline` suffixes on the input/output paths are encryption keys — they 
 ### 3.3 Deploy to the Triton repository
 
 ```bash
-riva-deploy /home/pipeline/riva/rmir/-canary-multi.rmir:pipeline /data/models -f
+riva-deploy /home/pipeline/riva/rmir/indic-canary-multi.rmir:pipeline /data/models -f
 ```
 
 `-f` overwrites any existing model directory of the same name. After this completes you should see a directory like:
@@ -251,7 +252,7 @@ Transcribe a file (Hindi example):
 python3 python-clients/scripts/asr/transcribe_file_offline.py \
   --server 0.0.0.0:50051 \
   --language hi \
-  --input-file /path/to/hi-IN_sample.wav
+  --input-file /opt/riva/wav/hi-IN_sample.wav
 ```
 
 Swap `--language` for any of the supported codes below to transcribe other languages. Audio should be 16 kHz mono WAV for best results; resample first if needed.
