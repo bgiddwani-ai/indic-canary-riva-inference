@@ -90,7 +90,6 @@ export PYTHONPATH=/home/pipeline/NeMo:$PYTHONPATH
 nemo2riva \
   --key=pipeline \
   --out /home/pipeline/riva/indic-canary.riva \
-  --format nemo \
   /home/pipeline/indic-canary.nemo
 ```
 
